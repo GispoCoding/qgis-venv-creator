@@ -1,10 +1,10 @@
-name: test
+name: Tests and Style check
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
 
 concurrency:
   group: test-${{ github.head_ref }}
@@ -13,30 +13,231 @@ concurrency:
 env:
   PYTHONUNBUFFERED: "1"
   FORCE_COLOR: "1"
+  STABLE_PYTHON_VERSION: "3.11"
 
 jobs:
-  run:
+  unittest-formatting:
     name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          cache: "pip"
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install Hatch
-      run: pip install --upgrade hatch
+      - name: Install Hatch
+        run: pip install --upgrade hatch
 
-    - name: Run static analysis
-      run: hatch fmt --check
+      - name: Run static analysis
+        run: hatch fmt --check
 
-    - name: Run tests
-      run: hatch run cov
+      - name: Check types
+        run: hatch run check-types
+
+      - name: Run tests
+        run: hatch run test-cov
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          cache: "pip"
+          python-version: "3.8"
+
+      - name: Install Hatch
+        run: |
+          pip install --upgrade pip
+          pip install hatch
+
+      - name: Update version
+        run: hatch version dev
+
+      - name: Artifact name
+        id: artifact-name
+        run: echo "name=qgis_venv_creator-build" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: hatch build
+
+      - name: Upload Artifacts
+        id: artifact-upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact-name.outputs.name }}
+          path: |
+            dist/*
+            src/qgis_venv_creator/create_qgis_venv.py
+    outputs:
+      artifact-name: ${{ steps.artifact-name.outputs.name }}
+      artifact-url: ${{ steps.artifact-upload.outputs.artifact-url }}
+
+  e2e-windows:
+    name: e2e - Windows
+    needs: [build]
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.STABLE_PYTHON_VERSION  }}
+        uses: actions/setup-python@v5
+        with:
+          cache: "pip"
+          python-version: ${{ env.STABLE_PYTHON_VERSION  }}
+
+      - name: install pytest
+        run: |
+          pip install --upgrade pip
+          pip install pytest
+
+      - uses: actions/cache@v4
+        with:
+          key: choco-cache
+          path: C:\Users\runneradmin\AppData\Local\Temp\chocolatey
+
+      - name: Install QGIS
+        uses: crazy-max/ghaction-chocolatey@v3
+        with:
+          args: install qgis-ltr -y --version=3.28.14 # todo: remove version once python issue is fixed in newer versions
+
+      - name: download whl
+        id: download-whl
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact-name }}
+
+      - name: Install qgis_venv_creator
+        run: pip install --no-index --find-links dist qgis_venv_creator
+
+      - name: install pytest
+        run: |
+          pip install --upgrade pip
+          pip install pytest
+
+      - name: Run tests
+        run: pytest tests --run-e2e -s
+
+  e2e-linux:
+    name: e2e - Linux
+    needs: [build]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install QGIS
+        run: |
+          sudo apt install gnupg software-properties-common
+          sudo wget -O /etc/apt/keyrings/qgis-archive-keyring.gpg https://download.qgis.org/downloads/qgis-archive-keyring.gpg
+          sudo tee -a /etc/apt/sources.list.d/qgis.sources << EOF
+          Types: deb deb-src
+          URIs: https://qgis.org/ubuntu-ltr
+          Suites: $(lsb_release -cs)
+          Architectures: amd64
+          Components: main
+          Signed-By: /etc/apt/keyrings/qgis-archive-keyring.gpg
+          EOF
+          sudo apt update
+          sudo apt install qgis
+          ls /usr/bin/qgis*
+          ls /usr/lib/python3/dist-packages
+          python3 -m site
+
+      - name: download whl
+        id: download-whl
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact-name }}
+
+      - run: ls dist
+
+      - name: Install qgis_venv_creator
+        run: pip3 install --no-index --find-links dist qgis_venv_creator
+
+      - name: install pytest
+        run: |
+          pip3 install --upgrade pip
+          pip3 install pytest
+
+      - name: Run tests
+        run: python3 -m pytest tests --run-e2e
+
+  post-artifact-comment:
+    name: Post artifact comment
+    needs: [unittest-formatting, build, e2e-linux, e2e-windows]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Comment to update
+        uses: peter-evans/find-comment@v3
+        id: comment-to-update
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: Build Artifacts
+
+      - name: Post artifact URL as a comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.comment-to-update.outputs.comment-id }}
+          edit-mode: replace
+          body: |-
+            ## Build Artifacts
+
+            Build succeeded!
+            You can download the built package [here](${{ needs.build.outputs.artifact-url }}).
+
+            Please note that files only stay for around 90 days!
+
+  clear-artifact-comment-on-failure:
+    name: Clear artifact comment
+    needs: [unittest-formatting, build, e2e-linux, e2e-windows]
+    runs-on: ubuntu-latest
+    if: ${{ failure() && github.event_name == 'pull_request' }}
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Comment to update
+        uses: peter-evans/find-comment@v3
+        id: comment-to-update
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: Build Artifacts
+
+      - name: Post artifact URL as a comment
+        uses: peter-evans/create-or-update-comment@v4
+        if: steps.comment-to-update.outputs.comment-id != ''
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.comment-to-update.outputs.comment-id }}
+          edit-mode: replace
+          body: |-
+            ## Build Artifacts
+
+            The latest tests or build failed, please check the workflow logs for more information.
