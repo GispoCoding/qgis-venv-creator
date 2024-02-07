@@ -10,9 +10,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = "MIT"
 keywords = []
-authors = [
-  { name = "Gispo Ltd.", email = "info@gispo.fi" },
-]
+authors = [{ name = "Gispo Ltd.", email = "info@gispo.fi" }]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
@@ -35,29 +33,18 @@ Source = "https://github.com/unknown/qgis-venv-creator"
 path = "src/qgis_venv_creator/__about__.py"
 
 [tool.hatch.envs.default]
-dependencies = [
-  "coverage[toml]>=6.5",
-  "pytest",
-]
+dependencies = ["coverage[toml]>=6.5", "pytest"]
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
 test-cov = "coverage run -m pytest {args:tests}"
-cov-report = [
-  "- coverage combine",
-  "coverage report",
-]
-cov = [
-  "test-cov",
-  "cov-report",
-]
+cov-report = ["- coverage combine", "coverage report"]
+cov = ["test-cov", "cov-report"]
 
 [[tool.hatch.envs.all.matrix]]
 python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
 [tool.hatch.envs.types]
-dependencies = [
-  "mypy>=1.0.0",
-]
+dependencies = ["mypy>=1.0.0"]
 [tool.hatch.envs.types.scripts]
 check = "mypy --install-types --non-interactive {args:src/qgis_venv_creator tests}"
 
@@ -65,17 +52,14 @@ check = "mypy --install-types --non-interactive {args:src/qgis_venv_creator test
 source_pkgs = ["qgis_venv_creator", "tests"]
 branch = true
 parallel = true
-omit = [
-  "src/qgis_venv_creator/__about__.py",
-]
+omit = ["src/qgis_venv_creator/__about__.py"]
 
 [tool.coverage.paths]
-qgis_venv_creator = ["src/qgis_venv_creator", "*/qgis-venv-creator/src/qgis_venv_creator"]
+qgis_venv_creator = [
+  "src/qgis_venv_creator",
+  "*/qgis-venv-creator/src/qgis_venv_creator",
+]
 tests = ["tests", "*/qgis-venv-creator/tests"]
 
 [tool.coverage.report]
-exclude_lines = [
-  "no cov",
-  "if __name__ == .__main__.:",
-  "if TYPE_CHECKING:",
-]
+exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
