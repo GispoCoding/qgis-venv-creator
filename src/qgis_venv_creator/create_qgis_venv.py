@@ -285,6 +285,7 @@ class Windows(MultiQgisPlatform):
         possible_qgis_installation_generators = [
             Path("C:/Program Files").glob("QGIS*/apps/qgis*/"),
             Path("C:/OSGeo4W/apps").glob("qgis*/"),
+            Path("C:/OSGeo4W64/apps").glob("qgis*/"),
         ]
 
         if custom_search_path_pattern is not None:
