@@ -1,0 +1,54 @@
+name: Prepare a Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version bump"
+        required: true
+        default: "minor"
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
+jobs:
+  update-version:
+    name: Update version and changelog
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Update the version
+        id: version
+        run: |
+          python -m pip install --upgrade pip
+          pip install hatch
+          hatch version ${{ github.event.inputs.version }}
+          echo "version=$(hatch version)" >> "$GITHUB_OUTPUT"
+
+      - uses: EndBug/add-and-commit@v9
+        with:
+          message: "Bump version to ${{ steps.version.outputs.version }}"
+          push: false
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: release/${{ steps.version.outputs.version }}
+          title: "Prepare release ${{ steps.version.outputs.version }}"
+          body: "Bump the version to ${{ steps.version.outputs.version }}."
+          base: main
+          labels: release
+          assignees: ${{ github.actor }}

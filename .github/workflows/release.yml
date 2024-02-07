@@ -1,0 +1,82 @@
+name: Publish
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
+    name: Build distribution 📦
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install hatch
+        run: |
+          pip install --upgrade pip
+          pip install hatch
+
+      - name: Get version info
+        id: version
+        run: echo "version=$(hatch version)" >> "$GITHUB_OUTPUT"
+
+      - name: Build distribution
+        run: hatch build
+
+      - name: upload distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: |
+            dist/*
+            src/qgis_venv_creator/create_qgis_venv.py
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+  release:
+    name: Create a Github release
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "Release ${{ needs.build.outputs.version }}"
+          tag_name: "v${{ needs.build.outputs.version }}"
+          files: |
+            dist/*
+            src/qgis_venv_creator/create_qgis_venv.py
+
+  publish:
+    name: Publish to PyPI
+    needs: [build]
+    permissions:
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+
+      - name: publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
