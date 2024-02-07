@@ -25,31 +25,28 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Documentation = "https://github.com/unknown/qgis-venv-creator#readme"
-Issues = "https://github.com/unknown/qgis-venv-creator/issues"
-Source = "https://github.com/unknown/qgis-venv-creator"
+
+[project.scripts]
+create-qgis-venv = "qgis_venv_creator.create_qgis_venv:main"
 
 [tool.hatch.version]
-path = "src/qgis_venv_creator/__about__.py"
+path = "src/qgis_venv_creator/create_qgis_venv.py"
 
 [tool.hatch.envs.default]
-dependencies = ["coverage[toml]>=6.5", "pytest"]
+dependencies = ["coverage[toml]>=6.5", "pytest", "mypy>=1.0.0"]
+
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
 test-cov = "coverage run -m pytest {args:tests}"
 cov-report = ["- coverage combine", "coverage report"]
 cov = ["test-cov", "cov-report"]
+check-types = "mypy --install-types --non-interactive {args:src/qgis_venv_creator tests}"
 
 [tool.hatch.envs.hatch-static-analysis]
 config-path = "ruff_defaults.toml"
 
 [[tool.hatch.envs.all.matrix]]
 python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
-
-[tool.hatch.envs.types]
-dependencies = ["mypy>=1.0.0"]
-[tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/qgis_venv_creator tests}"
 
 [tool.ruff]
 extend = "ruff_defaults.toml"
@@ -63,7 +60,6 @@ unfixable = [
 source_pkgs = ["qgis_venv_creator", "tests"]
 branch = true
 parallel = true
-omit = ["src/qgis_venv_creator/__about__.py"]
 
 [tool.coverage.paths]
 qgis_venv_creator = [
