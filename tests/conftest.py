@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024-present Lauri Kajan <lauri.kajan@gispo.fi>
+# SPDX-FileCopyrightText: 2024 Gispo Ltd. <info@gispo.fi>
 #
 # SPDX-License-Identifier: MIT
 
