@@ -5,14 +5,17 @@ build-backend = "hatchling.build"
 [project]
 name = "qgis-venv-creator"
 dynamic = ["version"]
-description = ''
+description = 'Tool to create a virtual python environment for QGIS plugin development'
 readme = "README.md"
 requires-python = ">=3.8"
-license = "MIT"
+license = { file = "LICENSE.txt" }
 keywords = []
 authors = [{ name = "Gispo Ltd.", email = "info@gispo.fi" }]
 classifiers = [
   "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
@@ -25,6 +28,9 @@ classifiers = [
 dependencies = []
 
 [project.urls]
+Documentation = "https://github.com/GispoCoding/qgis-venv-creator#readme"
+Issues = "https://github.com/GispoCoding/qgis-venv-creator/issues"
+Source = "https://github.com/GispoCoding/qgis-venv-creator"
 
 [project.scripts]
 create-qgis-venv = "qgis_venv_creator.create_qgis_venv:main"
