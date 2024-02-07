@@ -40,6 +40,9 @@ test-cov = "coverage run -m pytest {args:tests}"
 cov-report = ["- coverage combine", "coverage report"]
 cov = ["test-cov", "cov-report"]
 
+[tool.hatch.envs.hatch-static-analysis]
+config-path = "ruff_defaults.toml"
+
 [[tool.hatch.envs.all.matrix]]
 python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
@@ -47,6 +50,14 @@ python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
 dependencies = ["mypy>=1.0.0"]
 [tool.hatch.envs.types.scripts]
 check = "mypy --install-types --non-interactive {args:src/qgis_venv_creator tests}"
+
+[tool.ruff]
+extend = "ruff_defaults.toml"
+target-version = "py38"
+unfixable = [
+  "F401", # unused imports
+  "F841", # unused variables
+]
 
 [tool.coverage.run]
 source_pkgs = ["qgis_venv_creator", "tests"]
