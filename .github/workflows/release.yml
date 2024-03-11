@@ -58,7 +58,7 @@ jobs:
           name: build
 
       - name: Create release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           name: "Release ${{ needs.build.outputs.version }}"
           tag_name: "v${{ needs.build.outputs.version }}"
