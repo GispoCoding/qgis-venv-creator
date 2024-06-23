@@ -123,10 +123,42 @@ jobs:
       - name: Install qgis_venv_creator
         run: pip install --no-index --find-links dist qgis_venv_creator
 
+      - name: Run tests
+        run: pytest tests --run-e2e -s
+
+  e2e-macos:
+    name: e2e - macOs
+    needs: [build]
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install QGIS
+        run: |
+          brew install --cask qgis@ltr
+
+      - name: Set up Python ${{ env.STABLE_PYTHON_VERSION  }}
+        uses: actions/setup-python@v5
+        with:
+          cache: "pip"
+          python-version: ${{ env.STABLE_PYTHON_VERSION  }}
+
       - name: install pytest
         run: |
           pip install --upgrade pip
           pip install pytest
+
+      - name: download whl
+        id: download-whl
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact-name }}
+
+      - name: Install qgis_venv_creator
+        run: pip install --no-index --find-links dist qgis_venv_creator
 
       - name: Run tests
         run: pytest tests --run-e2e -s
@@ -180,7 +212,7 @@ jobs:
 
   post-artifact-comment:
     name: Post artifact comment
-    needs: [unittest-formatting, build, e2e-linux, e2e-windows]
+    needs: [unittest-formatting, build, e2e-linux, e2e-windows, e2e-macos]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     permissions:
@@ -212,7 +244,7 @@ jobs:
 
   clear-artifact-comment-on-failure:
     name: Clear artifact comment
-    needs: [unittest-formatting, build, e2e-linux, e2e-windows]
+    needs: [unittest-formatting, build, e2e-linux, e2e-windows, e2e-macos]
     runs-on: ubuntu-latest
     if: ${{ failure() && github.event_name == 'pull_request' }}
     permissions:

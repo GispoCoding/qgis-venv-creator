@@ -364,26 +364,42 @@ class Windows(MultiQgisPlatform):
         Windows._create_path_configuration_file(venv_directory, qgis_installation)
         Windows._create_sitecustomize_file(venv_directory, qgis_installation)
 
+
+class MacOs(MultiQgisPlatform):
+    qgis_installation_lookup_generators: ClassVar[list[Generator[Path, None, None]]] = [
+        Path("/Applications").glob("QGIS*.app"),
+        Path("/Applications/MacPorts").glob("QGIS*.app"),
+    ]
+
     @classmethod
-    def create_venv(
-        cls,
-        python_executable: Path | None,
-        qgis_installation: Path | None,
-        venv_parent: Path,
-        venv_name: str,
-        qgis_installation_search_path_pattern: str | None = None,
-    ) -> Path:
-        qgis_installation = qgis_installation or cls.select_qgis_install(qgis_installation_search_path_pattern)
-        if not cls._is_valid_qgis_path(qgis_installation):
-            raise InvalidQgisPathError(qgis_installation)
-        python_executable = python_executable or cls._find_qgis_python_executable(qgis_installation)
-        if not _is_valid_python_executable(python_executable):
-            raise InvalidPythonExecutableError(python_executable)
-        venv_directory = _create_venv(python_executable, venv_parent, venv_name=venv_name)
+    def _is_valid_qgis_path(cls, qgis_installation: Path) -> bool:
+        qgis_bin = qgis_installation / "Contents/MacOS/bin"
+        if not qgis_bin.exists():
+            return False
+        python_path = cls._find_qgis_python_executable(qgis_installation)
+        if not python_path:
+            return False
+        return True
 
-        cls._patch_venv(venv_directory, qgis_installation)
+    @staticmethod
+    def _find_qgis_python_executable(qgis_install_directory: Path) -> Path | None:
+        """Find the Python executable for the QGIS installation."""
 
-        return venv_directory
+        python_install = qgis_install_directory / "Contents/MacOS/bin/python3"
+        logger.debug("Found Python executable '%s'", python_install)
+        return python_install
+
+    @staticmethod
+    def _create_path_configuration_file(venv_directory: Path, qgis_installation: Path) -> None:
+        content = (qgis_installation / "Contents/Resources/python").as_posix() + "\n"
+
+        path_file_path = venv_directory / "qgis.pth"
+        logger.debug("Writing qgis path configuration to '%s'", path_file_path)
+        path_file_path.write_text(content, encoding="utf-8")
+
+    @staticmethod
+    def _patch_venv(venv_directory: Path, qgis_installation: Path) -> None:
+        MacOs._create_path_configuration_file(venv_directory, qgis_installation)
 
 
 class Linux(Platform):
@@ -407,7 +423,7 @@ def cli() -> None:
     environments: dict[str, SupportsVenvCreation] = {
         "Windows": Windows,
         "Linux": Linux,
-        # "Darwin": MacOs, TODO: Implement MacOs support
+        "Darwin": MacOs,
     }
     environment = environments.get(platform.system())
     if environment is None:
