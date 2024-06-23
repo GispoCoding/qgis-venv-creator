@@ -35,7 +35,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Hatch
-        run: pip install --upgrade hatch
+        uses: pypa/hatch@install
 
       - name: Run static analysis
         run: hatch fmt --check
@@ -59,9 +59,7 @@ jobs:
           python-version: "3.8"
 
       - name: Install Hatch
-        run: |
-          pip install --upgrade pip
-          pip install hatch
+        uses: pypa/hatch@install
 
       - name: Update version
         run: hatch version dev

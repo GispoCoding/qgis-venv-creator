@@ -3,6 +3,7 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/qgis-venv-creator.svg)](https://pypi.org/project/qgis-venv-creator)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/qgis-venv-creator.svg)](https://pypi.org/project/qgis-venv-creator)
 [![Tests and Style check](https://github.com/GispoCoding/qgis-venv-creator/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/GispoCoding/qgis-venv-creator/actions/workflows/test.yml)
+[![Hatch project](https://img.shields.io/badge/%F0%9F%A5%9A-Hatch-4051b5.svg)](https://github.com/pypa/hatch)
 
 ---
 
