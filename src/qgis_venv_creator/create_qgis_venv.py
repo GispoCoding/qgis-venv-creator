@@ -13,7 +13,6 @@ Usage:
 python create_qgis_venv.py [--help] [--venv-parent <path-to-venv-parent-directory>] [--venv-name <venv-name>]
 """
 
-
 from __future__ import annotations
 
 import argparse
@@ -25,7 +24,7 @@ import subprocess
 import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generator, Protocol, TypedDict, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Generator, Protocol, TypedDict, cast
 
 if TYPE_CHECKING:
 
@@ -39,12 +38,10 @@ if TYPE_CHECKING:
 
     class SupportsVenvCreation(Protocol):
         @classmethod
-        def create_venv(cls, *args: Any, **kwargs: Any) -> Path:
-            ...
+        def create_venv(cls, *args: Any, **kwargs: Any) -> Path: ...
 
         @staticmethod
-        def cli_arguments() -> list[CliArg]:
-            ...
+        def cli_arguments() -> list[CliArg]: ...
 
 
 __version__ = "0.1.0"
@@ -179,15 +176,31 @@ class Platform(ABC):
 
 
 class MultiQgisPlatform(Platform):
-    @staticmethod
-    @abstractmethod
-    def _find_qgis_installations(qgis_installation_search_path_pattern: str | None = None) -> list[Path]:
-        """Find all QGIS installations from the system."""
-        raise NotImplementedError
+    qgis_installation_lookup_generators: ClassVar[list[Generator[Path, None, None]]]
 
-    @staticmethod
+    @classmethod
+    def _find_qgis_installations(cls, custom_search_path_pattern: str | None = None) -> list[Path]:
+        """Find all QGIS installations from the system."""
+
+        if custom_search_path_pattern is not None:
+            if not custom_search_path_pattern.endswith(os.sep) or (
+                os.altsep is not None and not custom_search_path_pattern.endswith(os.altsep)
+            ):
+                custom_search_path_pattern += os.sep
+            cls.qgis_installation_lookup_generators.append(
+                _create_glob_generator_from_pattern(custom_search_path_pattern)
+            )
+
+        return [
+            qgis_installation
+            for possible_qgis_installation_glob in cls.qgis_installation_lookup_generators
+            for qgis_installation in possible_qgis_installation_glob
+            if cls._is_valid_qgis_path(qgis_installation)
+        ]
+
+    @classmethod
     @abstractmethod
-    def _is_valid_qgis_path(qgis_path: Path) -> bool:
+    def _is_valid_qgis_path(cls, qgis_path: Path) -> bool:
         """Validate that the given path is a valid QGIS installation."""
         raise NotImplementedError
 
@@ -198,7 +211,6 @@ class MultiQgisPlatform(Platform):
         raise NotImplementedError
 
     @classmethod
-    @abstractmethod
     def create_venv(
         cls,
         python_executable: Path | None,
@@ -207,7 +219,23 @@ class MultiQgisPlatform(Platform):
         venv_name: str,
         qgis_installation_search_path_pattern: str | None = None,
     ) -> Path:
-        raise NotImplementedError
+        qgis_installation = qgis_installation or cls.select_qgis_install(qgis_installation_search_path_pattern)
+        if not cls._is_valid_qgis_path(qgis_installation):
+            raise InvalidQgisPathError(qgis_installation)
+
+        python_executable = python_executable or cls._find_qgis_python_executable(qgis_installation)
+        if not _is_valid_python_executable(python_executable):
+            raise InvalidPythonExecutableError(python_executable)
+
+        venv_directory = _create_venv(python_executable, venv_parent, venv_name=venv_name)
+        cls._patch_venv(venv_directory, qgis_installation)
+        return venv_directory
+
+    @classmethod
+    def _patch_venv(cls, venv_directory: Path, qgis_installation: Path) -> None:  # noqa: ARG003 [Unused class method argument]
+        """Patch the virtual environment to work with the QGIS installation.
+        Override this method in the platform specific subclass to implement the patching."""
+        return
 
     @classmethod
     def select_qgis_install(cls, custom_search_path_pattern: str | None = None) -> Path:
@@ -278,39 +306,19 @@ class MultiQgisPlatform(Platform):
 
 
 class Windows(MultiQgisPlatform):
+    qgis_installation_lookup_generators: ClassVar[list[Generator[Path, None, None]]] = [
+        Path("C:/Program Files").glob("QGIS*/apps/qgis*/"),
+        Path("C:/OSGeo4W/apps").glob("qgis*/"),
+        Path("C:/OSGeo4W64/apps").glob("qgis*/"),
+    ]
+
     @classmethod
-    def _find_qgis_installations(cls, custom_search_path_pattern: str | None = None) -> list[Path]:
-        """Find all QGIS installations from the Windows system."""
-
-        possible_qgis_installation_generators = [
-            Path("C:/Program Files").glob("QGIS*/apps/qgis*/"),
-            Path("C:/OSGeo4W/apps").glob("qgis*/"),
-            Path("C:/OSGeo4W64/apps").glob("qgis*/"),
-        ]
-
-        if custom_search_path_pattern is not None:
-            if not custom_search_path_pattern.endswith(os.sep) or (
-                os.altsep is not None and not custom_search_path_pattern.endswith(os.altsep)
-            ):
-                custom_search_path_pattern += os.sep
-            possible_qgis_installation_generators.append(
-                _create_glob_generator_from_pattern(custom_search_path_pattern)
-            )
-
-        return [
-            qgis_installation
-            for possible_qgis_installation_glob in possible_qgis_installation_generators
-            for qgis_installation in possible_qgis_installation_glob
-            if cls._is_valid_qgis_path(qgis_installation)
-        ]
-
-    @staticmethod
-    def _is_valid_qgis_path(qgis_installation: Path) -> bool:
+    def _is_valid_qgis_path(cls, qgis_installation: Path) -> bool:
         root = qgis_installation.parent.parent
         bin_directory = root / "bin"
         qgis_bin_directory = qgis_installation / "bin"
         qt5_bin_directory = root / "apps" / "Qt5" / "bin"
-        python_path = Windows._find_qgis_python_executable(qgis_installation)
+        python_path = cls._find_qgis_python_executable(qgis_installation)
         if not python_path:
             return False
         return all(d.exists() for d in (bin_directory, qgis_bin_directory, qt5_bin_directory, python_path))
@@ -356,26 +364,42 @@ class Windows(MultiQgisPlatform):
         Windows._create_path_configuration_file(venv_directory, qgis_installation)
         Windows._create_sitecustomize_file(venv_directory, qgis_installation)
 
+
+class MacOs(MultiQgisPlatform):
+    qgis_installation_lookup_generators: ClassVar[list[Generator[Path, None, None]]] = [
+        Path("/Applications").glob("QGIS*.app"),
+        Path("/Applications/MacPorts").glob("QGIS*.app"),
+    ]
+
     @classmethod
-    def create_venv(
-        cls,
-        python_executable: Path | None,
-        qgis_installation: Path | None,
-        venv_parent: Path,
-        venv_name: str,
-        qgis_installation_search_path_pattern: str | None = None,
-    ) -> Path:
-        qgis_installation = qgis_installation or cls.select_qgis_install(qgis_installation_search_path_pattern)
-        if not cls._is_valid_qgis_path(qgis_installation):
-            raise InvalidQgisPathError(qgis_installation)
-        python_executable = python_executable or cls._find_qgis_python_executable(qgis_installation)
-        if not _is_valid_python_executable(python_executable):
-            raise InvalidPythonExecutableError(python_executable)
-        venv_directory = _create_venv(python_executable, venv_parent, venv_name=venv_name)
+    def _is_valid_qgis_path(cls, qgis_installation: Path) -> bool:
+        qgis_bin = qgis_installation / "Contents/MacOS/bin"
+        if not qgis_bin.exists():
+            return False
+        python_path = cls._find_qgis_python_executable(qgis_installation)
+        if not python_path:
+            return False
+        return True
 
-        cls._patch_venv(venv_directory, qgis_installation)
+    @staticmethod
+    def _find_qgis_python_executable(qgis_install_directory: Path) -> Path | None:
+        """Find the Python executable for the QGIS installation."""
 
-        return venv_directory
+        python_install = qgis_install_directory / "Contents/MacOS/bin/python3"
+        logger.debug("Found Python executable '%s'", python_install)
+        return python_install
+
+    @staticmethod
+    def _create_path_configuration_file(venv_directory: Path, qgis_installation: Path) -> None:
+        content = (qgis_installation / "Contents/Resources/python").as_posix() + "\n"
+
+        path_file_path = venv_directory / "qgis.pth"
+        logger.debug("Writing qgis path configuration to '%s'", path_file_path)
+        path_file_path.write_text(content, encoding="utf-8")
+
+    @staticmethod
+    def _patch_venv(venv_directory: Path, qgis_installation: Path) -> None:
+        MacOs._create_path_configuration_file(venv_directory, qgis_installation)
 
 
 class Linux(Platform):
@@ -399,7 +423,7 @@ def cli() -> None:
     environments: dict[str, SupportsVenvCreation] = {
         "Windows": Windows,
         "Linux": Linux,
-        # "Darwin": MacOs, TODO: Implement MacOs support
+        "Darwin": MacOs,
     }
     environment = environments.get(platform.system())
     if environment is None:

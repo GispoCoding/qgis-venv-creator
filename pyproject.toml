@@ -43,6 +43,7 @@ dependencies = ["coverage[toml]>=6.5", "pytest", "mypy>=1.0.0"]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
+test-e2e = "pytest --run-e2e {args:tests}"
 test-cov = "coverage run -m pytest {args:tests}"
 cov-report = ["- coverage combine", "coverage report"]
 cov = ["test-cov", "cov-report"]
@@ -57,6 +58,7 @@ python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
 [tool.ruff]
 extend = "ruff_defaults.toml"
 target-version = "py38"
+[tool.ruff.lint]
 unfixable = [
   "F401", # unused imports
   "F841", # unused variables

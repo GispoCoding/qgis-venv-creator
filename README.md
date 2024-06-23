@@ -3,10 +3,13 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/qgis-venv-creator.svg)](https://pypi.org/project/qgis-venv-creator)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/qgis-venv-creator.svg)](https://pypi.org/project/qgis-venv-creator)
 [![Tests and Style check](https://github.com/GispoCoding/qgis-venv-creator/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/GispoCoding/qgis-venv-creator/actions/workflows/test.yml)
+[![Hatch project](https://img.shields.io/badge/%F0%9F%A5%9A-Hatch-4051b5.svg)](https://github.com/pypa/hatch)
 
 ---
 
 Single file and zero dependency tool to create a Python virtual environment for QGIS plugin development.
+
+Supports Windows, macOS and Linux.
 
 **Table of Contents**
 
@@ -48,7 +51,7 @@ $ create-qgis-venv
 
 On a system where there might be multiple QGIS installations (ie. Windows, MacOs), you are asked to select the one you want to use for development.
 
-After the virtual environment is created, you can activate it and it will have access to the QGIS Python environment.
+After the virtual environment is created, you can activate it and it will have access to the PyQGIS API.
 
 ### Options
 
@@ -64,9 +67,9 @@ create-qgis-venv [-h] [--venv-parent VENV_PARENT] [--venv-name VENV_NAME]
 | -h, --help                              | ALL                   | Show this help message and exit                                                                                                                                                                                                                                                         |
 | --venv-parent                           | ALL                   | Path to the parent directory of the virtual environment to be created. Most likely your project directory. Default current directory.                                                                                                                                                   |
 | --venv-name                             | ALL                   | Name of the virtual environment                                                                                                                                                                                                                                                         |
-| --qgis-installation                     | Windows               | Path to the QGIS installation to use for development. Installations made with official msi and Osgeo4W installers are supported. Give the path to the 'qgis' directory inside the 'apps' directory. If not given, the user is prompted to select one.                                   |
-| --qgis-installation-search-path-pattern | Windows               | Custom glob pattern for QGIS installations to be selected. Can be set also with environment variable QGIS_INSTALLATION_SEARCH_PATH_PATTERN. For example "C:\\qgis\\\*\\apps\\qgis\*\\" to find installations from "C:\\qgis\\3.32\\apps\\qgis\\" and "C:\\qgis\\3.28\\apps\\qgis-ltr\\" |
-| --python-executable                     | Windows               | Path to the Python executable used by the QGIS installation. If not given, the Python executable is searched from the QGIS installation.                                                                                                                                                |
+| --qgis-installation                     | Windows, macOS        | Path to the QGIS installation to use for development. Installations made with official msi and Osgeo4W installers are supported. Give the path to the 'qgis' directory inside the 'apps' directory. If not given, the user is prompted to select one.                                   |
+| --qgis-installation-search-path-pattern | Windows, macOS        | Custom glob pattern for QGIS installations to be selected. Can be set also with environment variable QGIS_INSTALLATION_SEARCH_PATH_PATTERN. For example "C:\\qgis\\\*\\apps\\qgis\*\\" to find installations from "C:\\qgis\\3.32\\apps\\qgis\\" and "C:\\qgis\\3.28\\apps\\qgis-ltr\\" |
+| --python-executable                     | Windows, macOS        | Path to the Python executable used by the QGIS installation. If not given, the Python executable is searched from the QGIS installation.                                                                                                                                                |
 | --debug                                 | ALL                   | Enable debug logging                                                                                                                                                                                                                                                                    |
 
 ## Development
@@ -80,6 +83,20 @@ hatch config set dirs.env.virtual ".hatch"
 ```
 
 After Hatch has created the environment, you can set your Python interpreter to use the one located in `.hatch/qgis-venv-creator`.
+
+### Running tests
+
+To run unittests run:
+
+```console
+hatch run test-cov
+```
+
+To run end-to-end tests run:
+
+```console
+hatch run test-e2e
+```
 
 ### Pre-commit hook
 
