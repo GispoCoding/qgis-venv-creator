@@ -82,6 +82,20 @@ hatch config set dirs.env.virtual ".hatch"
 
 After Hatch has created the environment, you can set your Python interpreter to use the one located in `.hatch/qgis-venv-creator`.
 
+### Running tests
+
+To run unittests run:
+
+```console
+hatch run test-cov
+```
+
+To run end-to-end tests run:
+
+```console
+hatch run test-e2e
+```
+
 ### Pre-commit hook
 
 This project uses [pre-commit](https://pre-commit.com/) to run code checks and tests before committing. You can install pre-commit with:

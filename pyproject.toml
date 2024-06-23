@@ -43,6 +43,7 @@ dependencies = ["coverage[toml]>=6.5", "pytest", "mypy>=1.0.0"]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
+test-e2e = "pytest --run-e2e {args:tests}"
 test-cov = "coverage run -m pytest {args:tests}"
 cov-report = ["- coverage combine", "coverage report"]
 cov = ["test-cov", "cov-report"]
