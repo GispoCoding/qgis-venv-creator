@@ -345,10 +345,15 @@ class Windows(MultiQgisPlatform):
 
     @staticmethod
     def _create_path_configuration_file(venv_directory: Path, qgis_installation: Path) -> None:
-        content = (qgis_installation / "python").as_posix() + "\n"
+        qgis_paths = [
+            qgis_installation / "python",
+            qgis_installation / "python" / "plugins"
+        ]
 
         path_file_path = venv_directory / "qgis.pth"
-        logger.debug("Writing qgis path configuration to '%s'", path_file_path)
+        content = "\n".join(path.as_posix() for path in qgis_paths)
+
+        logger.debug("Writing QGIS path configuration to '%s'", path_file_path)
         path_file_path.write_text(content, encoding="utf-8")
 
     @staticmethod
