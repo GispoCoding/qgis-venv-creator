@@ -13,7 +13,6 @@ Usage:
 python create_qgis_venv.py [--help] [--venv-parent <path-to-venv-parent-directory>] [--venv-name <venv-name>]
 """
 
-
 from __future__ import annotations
 
 import argparse
@@ -39,12 +38,10 @@ if TYPE_CHECKING:
 
     class SupportsVenvCreation(Protocol):
         @classmethod
-        def create_venv(cls, *args: Any, **kwargs: Any) -> Path:
-            ...
+        def create_venv(cls, *args: Any, **kwargs: Any) -> Path: ...
 
         @staticmethod
-        def cli_arguments() -> list[CliArg]:
-            ...
+        def cli_arguments() -> list[CliArg]: ...
 
 
 __version__ = "0.1.0"
@@ -112,7 +109,11 @@ def _is_valid_python_executable(python_executable: Path | None) -> bool:
     return python_executable is not None and python_executable.exists() and os.access(python_executable, os.X_OK)
 
 
-def _create_venv(python_executable: Path | None, venv_parent: Path | None = None, venv_name: str | None = None) -> Path:
+def _create_venv(
+    python_executable: Path | None,
+    venv_parent: Path | None = None,
+    venv_name: str | None = None,
+) -> Path:
     """Create a virtual environment for a QGIS plugin project."""
 
     if python_executable is None or not python_executable.exists() or not os.access(python_executable, os.X_OK):
@@ -125,7 +126,11 @@ def _create_venv(python_executable: Path | None, venv_parent: Path | None = None
     venv_name = venv_name or ".venv"
 
     venv_directory = venv_parent / venv_name
-    logger.debug("Creating virtual environment to '%s' using '%s'", venv_directory, python_executable)
+    logger.debug(
+        "Creating virtual environment to '%s' using '%s'",
+        venv_directory,
+        python_executable,
+    )
     try:
         subprocess.run(
             [
@@ -181,7 +186,9 @@ class Platform(ABC):
 class MultiQgisPlatform(Platform):
     @staticmethod
     @abstractmethod
-    def _find_qgis_installations(qgis_installation_search_path_pattern: str | None = None) -> list[Path]:
+    def _find_qgis_installations(
+        qgis_installation_search_path_pattern: str | None = None,
+    ) -> list[Path]:
         """Find all QGIS installations from the system."""
         raise NotImplementedError
 
@@ -220,10 +227,10 @@ class MultiQgisPlatform(Platform):
 
         print("Found following QGIS installations from the system. Which one to use for development?")
         for i, path in enumerate(qgis_installations):
-            print(f"  {i+1} - {path}")
+            print(f"  {i + 1} - {path}")
         custom_selection_index = len(qgis_installations) + 1
         print(f"  {custom_selection_index} - Custom")
-        choose_prompt = f"Choose from [{'/'.join(str(i+1) for i in range(custom_selection_index))}]"
+        choose_prompt = f"Choose from [{'/'.join(str(i + 1) for i in range(custom_selection_index))}]"
         while True:
             try:
                 selection = int(input(f"  {choose_prompt}: "))
@@ -381,7 +388,10 @@ class Windows(MultiQgisPlatform):
 class Linux(Platform):
     @classmethod
     def create_venv(
-        cls, python_executable: Path | None = None, venv_parent: Path | None = None, venv_name: str | None = None
+        cls,
+        python_executable: Path | None = None,
+        venv_parent: Path | None = None,
+        venv_name: str | None = None,
     ) -> Path:
         if python_executable is None:
             python3_command = Path("python3")
