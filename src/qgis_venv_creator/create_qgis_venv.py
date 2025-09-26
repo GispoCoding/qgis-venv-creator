@@ -316,11 +316,34 @@ class Windows(MultiQgisPlatform):
         root = qgis_installation.parent.parent
         bin_directory = root / "bin"
         qgis_bin_directory = qgis_installation / "bin"
+
         qt5_bin_directory = root / "apps" / "Qt5" / "bin"
+        qt6_bin_directory = root / "apps" / "Qt6" / "bin"
+        qt_bin_directory_exists = qt5_bin_directory.exists() or qt6_bin_directory.exists()
+
         python_path = Windows._find_qgis_python_executable(qgis_installation)
         if not python_path:
             return False
-        return all(d.exists() for d in (bin_directory, qgis_bin_directory, qt5_bin_directory, python_path))
+        return (
+            all(d.exists() for d in (bin_directory, qgis_bin_directory))
+            and qt_bin_directory_exists
+            and python_path.exists()
+        )
+
+    @staticmethod
+    def _detect_qt_version(qgis_installation: Path) -> str:
+        """Detect Qt version (Qt5 or Qt6) based on directory structure."""
+
+        root = qgis_installation.parent.parent
+        qt5_bin_directory = root / "apps" / "Qt5" / "bin"
+        qt6_bin_directory = root / "apps" / "Qt6" / "bin"
+
+        if qt6_bin_directory.exists():
+            return "Qt6"
+        elif qt5_bin_directory.exists():
+            return "Qt5"
+        else:
+            raise InvalidQgisPathError(qgis_installation)
 
     @staticmethod
     def _find_qgis_python_executable(qgis_install_directory: Path) -> Path | None:
@@ -337,17 +360,20 @@ class Windows(MultiQgisPlatform):
         root = qgis_installation.parent.parent
         bin_directory = root / "bin"
         qgis_bin_directory = qgis_installation / "bin"
-        qt5_bin_directory = root / "apps" / "Qt5" / "bin"
+
+        qt_version = Windows._detect_qt_version(qgis_installation)
+        qt_bin_directory = root / "apps" / qt_version / "bin"
 
         content = (
             "import os\n"
             "\n"
             f"os.add_dll_directory('{bin_directory.as_posix()}')\n"
             f"os.add_dll_directory('{qgis_bin_directory.as_posix()}')\n"
-            f"os.add_dll_directory('{qt5_bin_directory.as_posix()}')\n"
+            f"os.add_dll_directory('{qt_bin_directory.as_posix()}')\n"
         )
         sitecustomize_file_path = venv_directory / "Lib" / "site-packages" / "sitecustomize.py"
         logger.debug("Writing site customize file to '%s'", sitecustomize_file_path)
+        logger.debug("Detected Qt version: %s", qt_version)
         sitecustomize_file_path.write_text(content, encoding="utf-8")
 
     @staticmethod
