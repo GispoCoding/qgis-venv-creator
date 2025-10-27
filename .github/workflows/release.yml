@@ -53,7 +53,7 @@ jobs:
       contents: write
     steps:
       - name: Download distribution
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: build
 
@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download distribution
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: build
 
