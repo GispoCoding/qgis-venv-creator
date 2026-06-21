@@ -40,7 +40,7 @@ create-qgis-venv = "qgis_venv_creator.create_qgis_venv:main"
 dev = [
     "coverage[toml]>=6.5",
     "pytest",
-    "mypy>=1.0.0",
+    "ty",
     "ruff>=0.15",
     "pre-commit>=3.0,<4.0",
 ]
