@@ -55,6 +55,12 @@ unfixable = [
   "F841", # unused variables
 ]
 
+[tool.ty.environment]
+python-version = "3.8"
+
+[tool.ty.terminal]
+error-on-warning = true
+
 [tool.coverage.run]
 source_pkgs = ["qgis_venv_creator", "tests"]
 branch = true
