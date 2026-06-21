@@ -13,7 +13,6 @@ Usage:
 python create_qgis_venv.py [--help] [--venv-parent <path-to-venv-parent-directory>] [--venv-name <venv-name>]
 """
 
-
 from __future__ import annotations
 
 import argparse
@@ -25,7 +24,7 @@ import subprocess
 import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generator, Protocol, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Iterator, Protocol, TypedDict, cast
 
 if TYPE_CHECKING:
 
@@ -39,14 +38,14 @@ if TYPE_CHECKING:
 
     class SupportsVenvCreation(Protocol):
         @classmethod
-        def create_venv(cls, *args: Any, **kwargs: Any) -> Path:
-            ...
+        def create_venv(cls, *args: Any, **kwargs: Any) -> Path: ...
 
         @staticmethod
-        def cli_arguments() -> list[CliArg]:
-            ...
+        def cli_arguments() -> list[CliArg]: ...
 
 
+# Keep in sync with [project].version in pyproject.toml (the source of truth).
+# Bump with `uv version --bump <part>`; guarded by tests/unit/test_version.py.
 __version__ = "0.1.0"
 
 cli_args: CliArgsType = {}
@@ -82,12 +81,12 @@ class VenvCreationError(RuntimeError):
 
 
 class InvalidPythonExecutableError(RuntimeError):
-    def __init__(self, executable_path: Path | None):
+    def __init__(self, executable_path: Path | str | None):
         super().__init__(f"{executable_path} is not a valid Python executable.")
 
 
 class InvalidQgisPathError(RuntimeError):
-    def __init__(self, qgis_installation: Path | None):
+    def __init__(self, qgis_installation: Path | str | None):
         super().__init__(f"{qgis_installation} is not a valid QGIS path.")
 
 
@@ -144,7 +143,7 @@ def _create_venv(python_executable: Path | None, venv_parent: Path | None = None
     return venv_directory
 
 
-def _create_glob_generator_from_pattern(pattern: str) -> Generator[Path, None, None]:
+def _create_glob_generator_from_pattern(pattern: str) -> Iterator[Path]:
     """Create a glob generator from a pattern.
 
     The Path.glob() method does not support absolute paths. This is to overcome that limitation.
@@ -220,10 +219,10 @@ class MultiQgisPlatform(Platform):
 
         print("Found following QGIS installations from the system. Which one to use for development?")
         for i, path in enumerate(qgis_installations):
-            print(f"  {i+1} - {path}")
+            print(f"  {i + 1} - {path}")
         custom_selection_index = len(qgis_installations) + 1
         print(f"  {custom_selection_index} - Custom")
-        choose_prompt = f"Choose from [{'/'.join(str(i+1) for i in range(custom_selection_index))}]"
+        choose_prompt = f"Choose from [{'/'.join(str(i + 1) for i in range(custom_selection_index))}]"
         while True:
             try:
                 selection = int(input(f"  {choose_prompt}: "))
@@ -282,7 +281,7 @@ class Windows(MultiQgisPlatform):
     def _find_qgis_installations(cls, custom_search_path_pattern: str | None = None) -> list[Path]:
         """Find all QGIS installations from the Windows system."""
 
-        possible_qgis_installation_generators = [
+        possible_qgis_installation_generators: list[Iterator[Path]] = [
             Path("C:/Program Files").glob("QGIS*/apps/qgis*/"),
             Path("C:/OSGeo4W/apps").glob("qgis*/"),
             Path("C:/OSGeo4W64/apps").glob("qgis*/"),
@@ -384,8 +383,8 @@ class Linux(Platform):
         cls, python_executable: Path | None = None, venv_parent: Path | None = None, venv_name: str | None = None
     ) -> Path:
         if python_executable is None:
-            python3_command = Path("python3")
-            python3_executable = shutil.which(python3_command)
+            python3_command = "python3"
+            python3_executable: str | None = shutil.which(python3_command)
             if python3_executable is None:
                 raise InvalidPythonExecutableError(python3_command)
             python_executable = Path(python3_executable)

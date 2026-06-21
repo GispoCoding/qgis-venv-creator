@@ -1,21 +1,22 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.11.23,<0.12.0"]
+build-backend = "uv_build"
 
 [project]
 name = "qgis-venv-creator"
-dynamic = ["version"]
+version = "0.1.0"
 description = 'Tool to create a virtual python environment for QGIS plugin development'
 readme = "README.md"
 requires-python = ">=3.8"
-license = { file = "LICENSE.txt" }
+license = "MIT"
+license-files = ["LICENSE.txt"]
 keywords = []
 authors = [{ name = "Gispo Ltd.", email = "info@gispo.fi" }]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
+  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
@@ -35,28 +36,20 @@ Source = "https://github.com/GispoCoding/qgis-venv-creator"
 [project.scripts]
 create-qgis-venv = "qgis_venv_creator.create_qgis_venv:main"
 
-[tool.hatch.version]
-path = "src/qgis_venv_creator/create_qgis_venv.py"
-
-[tool.hatch.envs.default]
-dependencies = ["coverage[toml]>=6.5", "pytest", "mypy>=1.0.0"]
-
-[tool.hatch.envs.default.scripts]
-test = "pytest {args:tests}"
-test-cov = "coverage run -m pytest {args:tests}"
-cov-report = ["- coverage combine", "coverage report"]
-cov = ["test-cov", "cov-report"]
-check-types = "mypy --install-types --non-interactive {args:src/qgis_venv_creator tests}"
-
-[tool.hatch.envs.hatch-static-analysis]
-config-path = "ruff_defaults.toml"
-
-[[tool.hatch.envs.all.matrix]]
-python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+[dependency-groups]
+dev = [
+    "coverage[toml]>=6.5",
+    "pytest",
+    "mypy>=1.0.0",
+    "ruff>=0.15",
+    "pre-commit>=3.0,<4.0",
+]
 
 [tool.ruff]
 extend = "ruff_defaults.toml"
 target-version = "py38"
+
+[tool.ruff.lint]
 unfixable = [
   "F401", # unused imports
   "F841", # unused variables
