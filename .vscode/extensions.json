@@ -3,6 +3,7 @@
         "ms-python.mypy-type-checker",
         "ms-python.python",
         "charliermarsh.ruff",
-        "editorconfig.editorconfig"
+        "editorconfig.editorconfig",
+        "tamasfe.even-better-toml"
     ]
 }

@@ -13,16 +13,21 @@ repos:
 
   - repo: local
     hooks:
-      - id: format
-        name: format
-        entry: hatch fmt
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
         language: system
-        types: [python]
-        pass_filenames: false
-        verbose: true
+        types_or: [python, pyi]
+        require_serial: true
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
       - id: types
         name: types
-        entry: hatch run check-types
+        entry: uv run mypy src/qgis_venv_creator tests
         language: system
         types: [python]
         pass_filenames: false

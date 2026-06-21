@@ -71,28 +71,41 @@ create-qgis-venv [-h] [--venv-parent VENV_PARENT] [--venv-name VENV_NAME]
 
 ## Development
 
-This project uses [Hatch](https://hatch.pypa.io/) for development and packaging. Install instructions can be found at the project's website https://hatch.pypa.io/latest/install.
+This project uses [uv](https://docs.astral.sh/uv/) for development and packaging. Install instructions can be found at https://docs.astral.sh/uv/getting-started/installation/.
 
-To facilitate development with VS Code, it is recommended to create hatch environments in the project folder. You can configure hatch to do so by running:
+Create the development environment with:
 
 ```console
-hatch config set dirs.env.virtual ".hatch"
+uv sync
 ```
 
-After Hatch has created the environment, you can set your Python interpreter to use the one located in `.hatch/qgis-venv-creator`.
+uv creates an in-project `.venv`, which VS Code picks up automatically as the interpreter.
+
+Common commands:
+
+```console
+uv run pytest                        # run unit tests (e2e skipped by default)
+uv run pytest tests/unit/test_prompt.py::test_prompt_on_valid_selection   # single test
+uv run coverage run -m pytest        # run tests with coverage
+uv run coverage report               # print coverage report
+uv run mypy src/qgis_venv_creator tests   # type check
+uv run ruff check .                  # lint
+uv run ruff format .                 # format
+uv build                             # build sdist + wheel into dist/
+```
+
+To run the test suite against a specific Python version, pass `-p`, e.g. `uv run -p 3.8 pytest`.
+
+The version is bumped with `uv version --bump <major|minor|patch>` (keep `__version__` in `src/qgis_venv_creator/create_qgis_venv.py` in sync — `tests/unit/test_version.py` guards this).
 
 ### Pre-commit hook
 
-This project uses [pre-commit](https://pre-commit.com/) to run code checks and tests before committing. You can install pre-commit with:
-
-```console
-pipx install pre-commit
-```
+This project uses [pre-commit](https://pre-commit.com/) to run code checks and tests before committing.
 
 Install pre-commit hooks to your repo with:
 
 ```console
-pre-commit install
+uv run pre-commit install
 ```
 
 ## License
