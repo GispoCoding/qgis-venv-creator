@@ -178,15 +178,15 @@ class Platform(ABC):
 
 
 class MultiQgisPlatform(Platform):
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def _find_qgis_installations(qgis_installation_search_path_pattern: str | None = None) -> list[Path]:
+    def _find_qgis_installations(cls, custom_search_path_pattern: str | None = None) -> list[Path]:
         """Find all QGIS installations from the system."""
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def _is_valid_qgis_path(qgis_path: Path) -> bool:
+    def _is_valid_qgis_path(qgis_installation: Path) -> bool:
         """Validate that the given path is a valid QGIS installation."""
         raise NotImplementedError
 
