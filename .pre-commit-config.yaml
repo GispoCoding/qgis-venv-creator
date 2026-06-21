@@ -27,7 +27,7 @@ repos:
         require_serial: true
       - id: types
         name: types
-        entry: uv run mypy src/qgis_venv_creator tests
+        entry: uv run ty check src/qgis_venv_creator tests
         language: system
         types: [python]
         pass_filenames: false

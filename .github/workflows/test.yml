@@ -41,7 +41,7 @@ jobs:
         run: uv run ruff format --check
 
       - name: Check types
-        run: uv run mypy src/qgis_venv_creator tests
+        run: uv run ty check src/qgis_venv_creator tests
 
       - name: Run tests
         run: uv run coverage run -m pytest

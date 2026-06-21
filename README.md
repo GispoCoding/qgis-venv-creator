@@ -88,7 +88,7 @@ uv run pytest                        # run unit tests (e2e skipped by default)
 uv run pytest tests/unit/test_prompt.py::test_prompt_on_valid_selection   # single test
 uv run coverage run -m pytest        # run tests with coverage
 uv run coverage report               # print coverage report
-uv run mypy src/qgis_venv_creator tests   # type check
+uv run ty check src/qgis_venv_creator tests   # type check
 uv run ruff check .                  # lint
 uv run ruff format .                 # format
 uv build                             # build sdist + wheel into dist/
