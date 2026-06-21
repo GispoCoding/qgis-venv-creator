@@ -103,12 +103,15 @@ jobs:
           pip install --upgrade pip
           pip install pytest
 
-      - uses: actions/cache@v4
+      - name: Cache QGIS installation
+        id: cache-qgis
+        uses: actions/cache@v4
         with:
-          key: choco-cache
-          path: C:\Users\runneradmin\AppData\Local\Temp\chocolatey
+          key: qgis-ltr-${{ runner.os }}-v1
+          path: C:\Program Files\QGIS*
 
       - name: Install QGIS
+        if: steps.cache-qgis.outputs.cache-hit != 'true'
         uses: crazy-max/ghaction-chocolatey@v3
         with:
           args: install qgis-ltr -y
