@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.utils import fail
+
 # Mark the whole module to run only on Windows
 pytestmark = [pytest.mark.linux, pytest.mark.e2e]
 
@@ -22,7 +24,7 @@ def venv_parent(tmp_path_factory: pytest.TempPathFactory) -> Path:
             check=True,
         )
     except subprocess.CalledProcessError as e:
-        pytest.fail(f"Venv creation failed.: {e.stdout}. {e.stderr}")
+        fail(f"Venv creation failed.: {e.stdout}. {e.stderr}")
 
     return venv_parent_directory
 
@@ -41,4 +43,4 @@ def test_venv_creation(venv_parent: Path):
         print(qgis_version)  # noqa: T201
         assert qgis_version.startswith("3.")
     except subprocess.CalledProcessError as e:
-        pytest.fail(f"Venv creation failed or the venv has no qgis module available.: {e.stderr}")
+        fail(f"Venv creation failed or the venv has no qgis module available.: {e.stderr}")
