@@ -85,7 +85,7 @@ class InvalidPythonExecutableError(RuntimeError):
 
 
 class InvalidQgisPathError(RuntimeError):
-    def __init__(self, qgis_installation: Path | str | None) -> None:
+    def __init__(self, qgis_installation: Path) -> None:
         super().__init__(f"{qgis_installation} is not a valid QGIS path.")
 
 
@@ -377,7 +377,7 @@ class Linux(Platform):
     ) -> Path:
         if python_executable is None:
             python3_command = "python3"
-            python3_executable: str | None = shutil.which(python3_command)
+            python3_executable = shutil.which(python3_command)
             if python3_executable is None:
                 raise InvalidPythonExecutableError(python3_command)
             python_executable = Path(python3_executable)
