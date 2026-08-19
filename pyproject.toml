@@ -46,14 +46,42 @@ dev = [
 ]
 
 [tool.ruff]
-extend = "ruff_defaults.toml"
+line-length = 120
 target-version = "py38"
 
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 80
+
 [tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "COM812", # missing trailing comma, conflicts with the formatter
+  "ISC001", # implicit string concatenation, conflicts with the formatter
+  "D1",     # missing docstrings, not required for every module/function
+  "D203",   # one blank line before class docstring, conflicts with D211
+  "D213",   # multi-line summary on second line, conflicts with D212
+  "ANN401", # typing.Any in *args/**kwargs pass-throughs is intentional
+  "S603",   # flags every subprocess call, inputs here are trusted lists
+]
 unfixable = [
   "F401", # unused imports
   "F841", # unused variables
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*" = ["INP001", "T201"]
+"tests/**/*" = ["ANN", "PLC1901", "PLR2004", "PLR6301", "S", "TID252"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.isort]
+known-first-party = ["qgis_venv_creator"]
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false
+mark-parentheses = false
 
 [tool.ty.environment]
 python-version = "3.8"
