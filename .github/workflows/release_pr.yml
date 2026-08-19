@@ -32,7 +32,8 @@ jobs:
       - name: Update the version
         id: version
         run: |
-          uv version --bump ${{ github.event.inputs.version }}
+          # --no-sync: update pyproject.toml and uv.lock without installing anything
+          uv version --bump ${{ github.event.inputs.version }} --no-sync
           python3 scripts/sync_version.py
           echo "version=$(uv version --short --color never)" >> "$GITHUB_OUTPUT"
 

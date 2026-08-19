@@ -61,7 +61,8 @@ jobs:
 
       - name: Update version
         run: |
-          uv version --bump patch --bump dev
+          # --frozen: the lock update would be discarded with the runner anyway
+          uv version --bump patch --bump dev --frozen
           python3 scripts/sync_version.py
 
       - name: Artifact name
