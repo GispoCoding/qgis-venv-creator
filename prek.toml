@@ -1,0 +1,35 @@
+# See https://prek.j178.dev for more information
+[[repos]]
+repo = "https://github.com/pre-commit/pre-commit-hooks"
+rev = "v4.5.0"
+hooks = [
+  { id = "trailing-whitespace", args = ["--markdown-linebreak-ext=md"] },
+  { id = "end-of-file-fixer" },
+  { id = "check-yaml" },
+  { id = "check-toml" },
+  { id = "check-added-large-files" },
+]
+
+[[repos]]
+repo = "https://github.com/astral-sh/ruff-pre-commit"
+# Keep in sync with the ruff version in uv.lock
+rev = "v0.15.18"
+hooks = [
+  # F401/F841 are unfixable in pyproject.toml so editors don't delete
+  # in-progress code on save; fix them when committing. F841's fix is
+  # unsafe by default, so it is promoted to safe here.
+  { id = "ruff-check", args = [
+    "--fix",
+    "--extend-fixable",
+    "F401,F841",
+    "--config",
+    "lint.extend-safe-fixes = ['F841']",
+  ] },
+  { id = "ruff-format" },
+]
+
+[[repos]]
+repo = "https://github.com/astral-sh/ty-pre-commit"
+# Keep in sync with the ty version in uv.lock
+rev = "v0.0.73"
+hooks = [{ id = "ty" }]
