@@ -45,7 +45,7 @@ def test_prompt_on_valid_selection(capfd):
             "  4 - Custom\n"
             "  Choose from [1/2/3/4]: \n"
         )
-        out, err = capfd.readouterr()
+        out, _err = capfd.readouterr()
         assert out == expected_output
 
 
@@ -75,7 +75,7 @@ def test_prompt_on_invalid_selection(capfd):
             "  Choose from [1/2/3/4]: \n"
         )
 
-        out, err = capfd.readouterr()
+        out, _err = capfd.readouterr()
         assert out == expected_output
 
 
@@ -99,5 +99,5 @@ def test_prompt_on_custom_path(capfd):
             "  Give path to QGIS installation: \n"
         )
 
-        out, err = capfd.readouterr()
+        out, _err = capfd.readouterr()
         assert out == expected_output
