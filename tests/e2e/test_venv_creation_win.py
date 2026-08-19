@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.utils import fail
+
 # Mark the whole module to run only on Windows
 pytestmark = [pytest.mark.windows, pytest.mark.e2e]
 
@@ -25,7 +27,7 @@ class TestVenvCreation:
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            pytest.fail(f"Venv creation failed.: {e.stdout}. {e.stderr}")
+            fail(f"Venv creation failed.: {e.stdout}. {e.stderr}")
 
         return venv_parent_directory
 
@@ -43,7 +45,7 @@ class TestVenvCreation:
             print(qgis_version)  # noqa: T201
             assert qgis_version.startswith("3.")
         except subprocess.CalledProcessError as e:
-            pytest.fail(f"Venv has no qgis module available.: {e.stderr}")
+            fail(f"Venv has no qgis module available.: {e.stderr}")
 
     def test_sqlite_is_importable(self, venv_parent: Path):
         """Test if the sqlite3 module is available in the venv.
@@ -62,7 +64,7 @@ class TestVenvCreation:
             )
             print(p.stdout)  # noqa: T201
         except subprocess.CalledProcessError as e:
-            pytest.fail(f"Venv has no sqlite3 module available.: {e.stderr}")
+            fail(f"Venv has no sqlite3 module available.: {e.stderr}")
 
     def test_pip_works(self, venv_parent: Path):
         """Test if new packages can be installed using pip
@@ -81,4 +83,4 @@ class TestVenvCreation:
             )
             print(p.stdout)  # noqa: T201
         except subprocess.CalledProcessError as e:
-            pytest.fail(f"Pip does not work on the venv created.: {e.stderr}")
+            fail(f"Pip does not work on the venv created.: {e.stderr}")
