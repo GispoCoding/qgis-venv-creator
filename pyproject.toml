@@ -40,7 +40,7 @@ dev = [
     { include-group = "lint" },
     { include-group = "test" },
     { include-group = "types" },
-    "pre-commit>=3.0,<4.0",
+    "prek>=0.4",
 ]
 lint = ["ruff>=0.15"]
 test = [
@@ -90,6 +90,10 @@ known-first-party = ["qgis_venv_creator"]
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
 mark-parentheses = false
+
+[tool.ty.src]
+# scripts/ targets newer Python (tomllib) than the 3.8 baseline
+include = ["src/qgis_venv_creator", "tests"]
 
 [tool.ty.environment]
 python-version = "3.8"

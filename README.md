@@ -100,12 +100,12 @@ The version is bumped with `uv version --bump <major|minor|patch>` followed by `
 
 ### Pre-commit hook
 
-This project uses [pre-commit](https://pre-commit.com/) to run code checks and tests before committing.
+This project uses [prek](https://prek.j178.dev/) to run code checks before committing.
 
 Install pre-commit hooks to your repo with:
 
 ```console
-uv run pre-commit install
+uv run prek install
 ```
 
 ## License
