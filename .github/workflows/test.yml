@@ -37,16 +37,16 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Run static analysis (lint)
-        run: uv run --locked ruff check
+        run: uv run --locked --only-group lint ruff check
 
       - name: Run static analysis (format)
-        run: uv run --locked ruff format --check
+        run: uv run --locked --only-group lint ruff format --check
 
       - name: Check types
-        run: uv run --locked ty check src/qgis_venv_creator tests
+        run: uv run --locked --no-default-groups --group types ty check src/qgis_venv_creator tests
 
       - name: Run tests
-        run: uv run --locked coverage run -m pytest
+        run: uv run --locked --no-default-groups --group test coverage run -m pytest
 
   build:
     name: Build

@@ -765,6 +765,26 @@ dev = [
     { name = "ruff" },
     { name = "ty" },
 ]
+lint = [
+    { name = "ruff" },
+]
+test = [
+    { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, extra = ["toml"], marker = "python_full_version < '3.9'" },
+    { name = "coverage", version = "7.10.7", source = { registry = "https://pypi.org/simple" }, extra = ["toml"], marker = "python_full_version == '3.9.*'" },
+    { name = "coverage", version = "7.14.2", source = { registry = "https://pypi.org/simple" }, extra = ["toml"], marker = "python_full_version >= '3.10'" },
+    { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest", version = "8.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "pytest", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+types = [
+    { name = "coverage", version = "7.6.1", source = { registry = "https://pypi.org/simple" }, extra = ["toml"], marker = "python_full_version < '3.9'" },
+    { name = "coverage", version = "7.10.7", source = { registry = "https://pypi.org/simple" }, extra = ["toml"], marker = "python_full_version == '3.9.*'" },
+    { name = "coverage", version = "7.14.2", source = { registry = "https://pypi.org/simple" }, extra = ["toml"], marker = "python_full_version >= '3.10'" },
+    { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pytest", version = "8.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "pytest", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "ty" },
+]
 
 [package.metadata]
 
@@ -774,6 +794,16 @@ dev = [
     { name = "pre-commit", specifier = ">=3.0,<4.0" },
     { name = "pytest" },
     { name = "ruff", specifier = ">=0.15" },
+    { name = "ty" },
+]
+lint = [{ name = "ruff", specifier = ">=0.15" }]
+test = [
+    { name = "coverage", extras = ["toml"], specifier = ">=6.5" },
+    { name = "pytest" },
+]
+types = [
+    { name = "coverage", extras = ["toml"], specifier = ">=6.5" },
+    { name = "pytest" },
     { name = "ty" },
 ]
 

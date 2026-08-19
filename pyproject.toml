@@ -38,11 +38,20 @@ create-qgis-venv = "qgis_venv_creator.create_qgis_venv:main"
 
 [dependency-groups]
 dev = [
+    { include-group = "lint" },
+    { include-group = "test" },
+    { include-group = "types" },
+    "pre-commit>=3.0,<4.0",
+]
+lint = ["ruff>=0.15"]
+test = [
     "coverage[toml]>=6.5",
     "pytest",
+]
+# ty also needs the test dependencies to type check the tests
+types = [
     "ty",
-    "ruff>=0.15",
-    "pre-commit>=3.0,<4.0",
+    { include-group = "test" },
 ]
 
 [tool.ruff]
