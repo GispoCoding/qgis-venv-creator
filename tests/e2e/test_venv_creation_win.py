@@ -67,7 +67,7 @@ class TestVenvCreation:
             fail(f"Venv has no sqlite3 module available.: {e.stderr}")
 
     def test_pip_works(self, venv_parent: Path):
-        """Test if new packages can be installed using pip
+        """Test if new packages can be installed using pip.
 
         Pip uses a ssl library that is located in osgeo4w/bin directory which is not discovered without the right
         kind of sitecustomize.py.
