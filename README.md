@@ -96,7 +96,7 @@ uv build                             # build sdist + wheel into dist/
 
 To run the test suite against a specific Python version, pass `-p`, e.g. `uv run -p 3.8 pytest`.
 
-The version is bumped with `uv version --bump <major|minor|patch>` (keep `__version__` in `src/qgis_venv_creator/create_qgis_venv.py` in sync — `tests/unit/test_version.py` guards this).
+The version is bumped with `uv version --bump <major|minor|patch>` followed by `python scripts/sync_version.py`, which copies the new version into `__version__` in `src/qgis_venv_creator/create_qgis_venv.py` (`tests/unit/test_version.py` guards against drift).
 
 ### Pre-commit hook
 
