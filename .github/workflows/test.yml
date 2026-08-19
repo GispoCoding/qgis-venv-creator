@@ -95,7 +95,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Python ${{ env.STABLE_PYTHON_VERSION  }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           cache: "pip"
           python-version: ${{ env.STABLE_PYTHON_VERSION  }}
