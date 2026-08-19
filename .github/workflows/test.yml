@@ -14,6 +14,8 @@ env:
   PYTHONUNBUFFERED: "1"
   FORCE_COLOR: "1"
   STABLE_PYTHON_VERSION: "3.12"
+  # Bumping this both installs the new QGIS version and invalidates the cache.
+  QGIS_LTR_VERSION: "3.44.13"
 
 jobs:
   unittest-formatting:
@@ -35,16 +37,16 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Run static analysis (lint)
-        run: uv run ruff check
+        run: uv run --locked ruff check
 
       - name: Run static analysis (format)
-        run: uv run ruff format --check
+        run: uv run --locked ruff format --check
 
       - name: Check types
-        run: uv run ty check src/qgis_venv_creator tests
+        run: uv run --locked ty check src/qgis_venv_creator tests
 
       - name: Run tests
-        run: uv run coverage run -m pytest
+        run: uv run --locked coverage run -m pytest
 
   build:
     name: Build
@@ -60,8 +62,7 @@ jobs:
       - name: Update version
         run: |
           uv version --bump patch --bump dev
-          new_version=$(uv version --short --color never)
-          sed -i "s/^__version__ = .*/__version__ = \"$new_version\"/" src/qgis_venv_creator/create_qgis_venv.py
+          python3 scripts/sync_version.py
 
       - name: Artifact name
         id: artifact-name
@@ -107,14 +108,14 @@ jobs:
         id: cache-qgis
         uses: actions/cache@v4
         with:
-          key: qgis-ltr-${{ runner.os }}-v1
+          key: qgis-ltr-${{ env.QGIS_LTR_VERSION }}-${{ runner.os }}
           path: C:\Program Files\QGIS*
 
       - name: Install QGIS
         if: steps.cache-qgis.outputs.cache-hit != 'true'
         uses: crazy-max/ghaction-chocolatey@v3
         with:
-          args: install qgis-ltr -y
+          args: install qgis-ltr -y --version=${{ env.QGIS_LTR_VERSION }}
 
       - name: download whl
         id: download-whl
