@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -43,7 +45,13 @@ class TestVenvCreation:
             )
             qgis_version = p.stdout.strip()
             print(qgis_version)  # noqa: T201
-            assert qgis_version.startswith("3.")
+            expected_version = os.environ.get("QGIS_EXPECTED_VERSION")
+            if expected_version:
+                expected_major = expected_version.split(".")[0]
+                assert qgis_version.startswith(f"{expected_major}.")
+            else:
+                # Local run: accept any installed QGIS version
+                assert re.match(r"^\d+\.", qgis_version)
         except subprocess.CalledProcessError as e:
             fail(f"Venv has no qgis module available.: {e.stderr}")
 
