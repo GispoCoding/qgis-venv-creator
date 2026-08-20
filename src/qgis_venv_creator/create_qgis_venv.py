@@ -161,6 +161,15 @@ def _create_glob_generator_from_pattern(pattern: str) -> Iterator[Path]:
     return path.glob("/".join(glob_parts))
 
 
+def _detect_qt_folder_for_qgis(qgis_installation: Path) -> str:
+    """Detect the Qt folder for the given QGIS installation."""
+    core_pyi_file = qgis_installation / "python" / "qgis" / "_core.pyi"
+    core_pyi_content = core_pyi_file.read_text(encoding="utf-8", errors="ignore")
+    if "import PyQt6.sip" in core_pyi_content:
+        return "Qt6"
+    return "Qt5"
+
+
 class Platform(ABC):
     @classmethod
     @abstractmethod
@@ -302,11 +311,12 @@ class Windows(MultiQgisPlatform):
         root = qgis_installation.parent.parent
         bin_directory = root / "bin"
         qgis_bin_directory = qgis_installation / "bin"
-        qt5_bin_directory = root / "apps" / "Qt5" / "bin"
+        qt_folder = _detect_qt_folder_for_qgis(qgis_installation)
+        qt_bin_directory = root / "apps" / qt_folder / "bin"
         python_path = Windows._find_qgis_python_executable(qgis_installation)
         if not python_path:
             return False
-        return all(d.exists() for d in (bin_directory, qgis_bin_directory, qt5_bin_directory, python_path))
+        return all(d.exists() for d in (bin_directory, qgis_bin_directory, qt_bin_directory, python_path))
 
     @staticmethod
     def _find_qgis_python_executable(qgis_install_directory: Path) -> Path | None:
@@ -322,14 +332,15 @@ class Windows(MultiQgisPlatform):
         root = qgis_installation.parent.parent
         bin_directory = root / "bin"
         qgis_bin_directory = qgis_installation / "bin"
-        qt5_bin_directory = root / "apps" / "Qt5" / "bin"
+        qt_folder = _detect_qt_folder_for_qgis(qgis_installation)
+        qt_bin_directory = root / "apps" / qt_folder / "bin"
 
         content = (
             "import os\n"
             "\n"
             f"os.add_dll_directory('{bin_directory.as_posix()}')\n"
             f"os.add_dll_directory('{qgis_bin_directory.as_posix()}')\n"
-            f"os.add_dll_directory('{qt5_bin_directory.as_posix()}')\n"
+            f"os.add_dll_directory('{qt_bin_directory.as_posix()}')\n"
         )
         sitecustomize_file_path = venv_directory / "Lib" / "site-packages" / "sitecustomize.py"
         logger.debug("Writing site customize file to '%s'", sitecustomize_file_path)
