@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 
 # Keep in sync with [project].version in pyproject.toml (the source of truth).
 # Bump with `uv version --bump <part>`; guarded by tests/unit/test_version.py.
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 cli_args: CliArgsType = {}
 

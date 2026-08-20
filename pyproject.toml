@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "qgis-venv-creator"
-version = "0.1.0"
+version = "0.2.0"
 description = 'Tool to create a virtual python environment for QGIS plugin development'
 readme = "README.md"
 requires-python = ">=3.8"
