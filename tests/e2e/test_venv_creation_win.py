@@ -15,24 +15,25 @@ from tests.utils import fail
 pytestmark = [pytest.mark.windows, pytest.mark.e2e]
 
 
+@pytest.fixture(scope="module")
+def venv_parent(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    venv_parent_directory = tmp_path_factory.mktemp("venv_parent")
+
+    try:
+        subprocess.run(
+            ["create-qgis-venv", "--venv-name", ".venv"],
+            input="1\n",
+            cwd=venv_parent_directory,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        fail(f"Venv creation failed.: {e.stdout}. {e.stderr}")
+
+    return venv_parent_directory
+
+
 class TestVenvCreation:
-    @pytest.fixture(scope="class")
-    def venv_parent(self, tmp_path_factory: pytest.TempPathFactory) -> Path:
-        venv_parent_directory = tmp_path_factory.mktemp("venv_parent")
-
-        try:
-            subprocess.run(
-                ["create-qgis-venv", "--venv-name", ".venv"],
-                input="1\n",
-                cwd=venv_parent_directory,
-                text=True,
-                check=True,
-            )
-        except subprocess.CalledProcessError as e:
-            fail(f"Venv creation failed.: {e.stdout}. {e.stderr}")
-
-        return venv_parent_directory
-
     def test_qgis_is_importable(self, venv_parent: Path):
         try:
             p = subprocess.run(
