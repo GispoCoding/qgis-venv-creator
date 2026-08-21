@@ -204,7 +204,7 @@ jobs:
           body-includes: Build Artifacts
 
       - name: Post artifact URL as a comment
-        uses: peter-evans/create-or-update-comment@v4
+        uses: peter-evans/create-or-update-comment@v5
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-id: ${{ steps.comment-to-update.outputs.comment-id }}
@@ -236,7 +236,7 @@ jobs:
           body-includes: Build Artifacts
 
       - name: Post artifact URL as a comment
-        uses: peter-evans/create-or-update-comment@v4
+        uses: peter-evans/create-or-update-comment@v5
         if: steps.comment-to-update.outputs.comment-id != ''
         with:
           issue-number: ${{ github.event.pull_request.number }}
