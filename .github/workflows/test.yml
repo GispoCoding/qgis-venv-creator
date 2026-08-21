@@ -72,7 +72,7 @@ jobs:
 
       - name: Upload Artifacts
         id: artifact-upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.artifact-name.outputs.name }}
           path: |
