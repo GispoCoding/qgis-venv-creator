@@ -113,7 +113,7 @@ jobs:
 
       - name: Cache QGIS installation
         id: cache-qgis
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           key: ${{ matrix.qgis-package }}-${{ matrix.qgis-version }}-${{ runner.os }}
           path: C:\Program Files\QGIS*
