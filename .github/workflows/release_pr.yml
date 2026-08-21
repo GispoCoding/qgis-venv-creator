@@ -37,7 +37,7 @@ jobs:
           python3 scripts/sync_version.py
           echo "version=$(uv version --short --color never)" >> "$GITHUB_OUTPUT"
 
-      - uses: EndBug/add-and-commit@v9
+      - uses: EndBug/add-and-commit@v10
         with:
           message: "Bump version to ${{ steps.version.outputs.version }}"
           push: false
