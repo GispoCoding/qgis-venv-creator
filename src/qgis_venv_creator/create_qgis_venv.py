@@ -350,7 +350,9 @@ class Windows(MultiQgisPlatform):
     def _create_path_configuration_file(venv_directory: Path, qgis_installation: Path) -> None:
         content = (qgis_installation / "python").as_posix() + "\n"
 
-        path_file_path = venv_directory / "qgis.pth"
+        # Python would also read the file from the venv root on Windows, but tools that read
+        # .pth files without running Python (e.g. ty) only look into site-packages
+        path_file_path = venv_directory / "Lib" / "site-packages" / "qgis.pth"
         logger.debug("Writing qgis path configuration to '%s'", path_file_path)
         path_file_path.write_text(content, encoding="utf-8")
 
