@@ -5,22 +5,37 @@ on:
     branches: [main]
     types: [closed]
 
+permissions: {}
+
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  # Never cancel a release halfway through publishing
+  cancel-in-progress: false
 
 jobs:
   build:
-    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
+    # Only merged release PRs from this repository, never from forks
+    if: >-
+      github.event.pull_request.merged == true
+      && startsWith(github.head_ref, 'release/')
+      && github.event.pull_request.head.repo.full_name == github.repository
     name: Build distribution 📦
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The commit the PR was merged as; the release tag points to it too
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          enable-cache: true
+          # No cache in release workflows, to rule out cache poisoning
+          enable-cache: false
 
       - name: Get version info
         id: version
@@ -35,7 +50,7 @@ jobs:
         run: uv build
 
       - name: upload distribution
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: build
           path: |
@@ -46,39 +61,46 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
 
-  release:
-    name: Create a Github release
-    needs: [build]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Download distribution
-        uses: actions/download-artifact@v8
-        with:
-          name: build
-
-      - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: "Release ${{ needs.build.outputs.version }}"
-          tag_name: "v${{ needs.build.outputs.version }}"
-          body_path: release-notes.md
-          files: |
-            dist/*
-            src/qgis_venv_creator/create_qgis_venv.py
-
   publish:
     name: Publish to PyPI
     needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/project/qgis-venv-creator/${{ needs.build.outputs.version }}/
     permissions:
       id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
-    runs-on: ubuntu-latest
     steps:
       - name: Download distribution
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: build
 
       - name: publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+
+  release:
+    name: Create a GitHub release
+    # Tag and release only after the package is on PyPI
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download distribution
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: build
+
+      - name: Create release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          name: "Release ${{ needs.build.outputs.version }}"
+          tag_name: "v${{ needs.build.outputs.version }}"
+          target_commitish: ${{ github.event.pull_request.merge_commit_sha }}
+          body_path: release-notes.md
+          files: |
+            dist/*
+            src/qgis_venv_creator/create_qgis_venv.py

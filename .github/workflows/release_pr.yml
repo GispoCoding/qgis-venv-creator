@@ -13,27 +13,36 @@ on:
           - minor
           - patch
 
+permissions: {}
+
 jobs:
   update-version:
     name: Update version and changelog
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # create-pull-request configures its own credentials for pushing the branch
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          enable-cache: true
+          # No cache in release workflows, to rule out cache poisoning
+          enable-cache: false
 
       - name: Update the version and changelog
         id: version
+        env:
+          BUMP: ${{ inputs.version }}
         run: |
           # --no-sync: update pyproject.toml and uv.lock without installing anything
-          uv version --bump ${{ github.event.inputs.version }} --no-sync
+          uv version --bump "$BUMP" --no-sync
           python3 scripts/sync_version.py
           version="$(uv version --short --color never)"
           python3 scripts/changelog.py release "$version"
@@ -46,16 +55,11 @@ jobs:
           } > "$RUNNER_TEMP/pr-body.md"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - uses: EndBug/add-and-commit@v9
-        with:
-          message: "Bump version to ${{ steps.version.outputs.version }}"
-          push: false
-
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           branch: release/${{ steps.version.outputs.version }}
+          commit-message: "Bump version to ${{ steps.version.outputs.version }}"
           title: "Prepare release ${{ steps.version.outputs.version }}"
           body-path: ${{ runner.temp }}/pr-body.md
           base: main
