@@ -5,22 +5,37 @@ on:
     branches: [main]
     types: [closed]
 
+permissions: {}
+
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  # Never cancel a release halfway through publishing
+  cancel-in-progress: false
 
 jobs:
   build:
-    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
+    # Only merged release PRs from this repository, never from forks
+    if: >-
+      github.event.pull_request.merged == true
+      && startsWith(github.head_ref, 'release/')
+      && github.event.pull_request.head.repo.full_name == github.repository
     name: Build distribution 📦
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The commit the PR was merged as; the release tag points to it too
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
-          enable-cache: true
+          # No cache in release workflows, to rule out cache poisoning
+          enable-cache: false
 
       - name: Get version info
         id: version
@@ -46,10 +61,31 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
 
-  release:
-    name: Create a Github release
+  publish:
+    name: Publish to PyPI
     needs: [build]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/project/qgis-venv-creator/${{ needs.build.outputs.version }}/
+    permissions:
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
+    steps:
+      - name: Download distribution
+        uses: actions/download-artifact@v8
+        with:
+          name: build
+
+      - name: publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  release:
+    name: Create a GitHub release
+    # Tag and release only after the package is on PyPI
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
@@ -63,22 +99,8 @@ jobs:
         with:
           name: "Release ${{ needs.build.outputs.version }}"
           tag_name: "v${{ needs.build.outputs.version }}"
+          target_commitish: ${{ github.event.pull_request.merge_commit_sha }}
           body_path: release-notes.md
           files: |
             dist/*
             src/qgis_venv_creator/create_qgis_venv.py
-
-  publish:
-    name: Publish to PyPI
-    needs: [build]
-    permissions:
-      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download distribution
-        uses: actions/download-artifact@v8
-        with:
-          name: build
-
-      - name: publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
