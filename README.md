@@ -96,8 +96,6 @@ uv build                             # build sdist + wheel into dist/
 
 To run the test suite against a specific Python version, pass `-p`, e.g. `uv run -p 3.8 pytest`.
 
-The version is bumped with `uv version --bump <major|minor|patch>` followed by `python scripts/sync_version.py`, which copies the new version into `__version__` in `src/qgis_venv_creator/create_qgis_venv.py` (`tests/unit/test_version.py` guards against drift).
-
 ### Pre-commit hook
 
 This project uses [prek](https://prek.j178.dev/) to run code checks before committing.
@@ -107,6 +105,18 @@ Install pre-commit hooks to your repo with:
 ```console
 uv run prek install
 ```
+
+### Changelog
+
+Notable changes are recorded in [CHANGELOG.md](CHANGELOG.md) in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format. Every PR that changes something users notice adds an entry under `## [Unreleased]`. A CI check enforces this. If a PR doesn't need an entry, label it with `skip-changelog`. Dependabot PRs are skipped automatically.
+
+### Releasing
+
+1. Run the [Prepare a Release](https://github.com/GispoCoding/qgis-venv-creator/actions/workflows/release_pr.yml) workflow and choose the version bump. It opens a `release/<version>` PR that bumps the version and moves the unreleased changelog entries under the new version.
+2. Review and merge the PR.
+3. Merging triggers the *Publish* workflow. It publishes the package to PyPI and creates a GitHub release with the version's changelog entries as its notes.
+
+The release PR is made with `uv version --bump <major|minor|patch>`, `python scripts/sync_version.py` and `python scripts/changelog.py release <version>`. `sync_version.py` copies the new version into `__version__` in `src/qgis_venv_creator/create_qgis_venv.py` (`tests/unit/test_version.py` guards against drift).
 
 ## License
 

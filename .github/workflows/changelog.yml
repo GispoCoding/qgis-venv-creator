@@ -1,0 +1,36 @@
+name: Changelog
+
+on:
+  pull_request:
+    branches: [main]
+    # labeled/unlabeled re-run the check when the skip-changelog label changes
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  changelog:
+    name: Changelog entry
+    # Dependency updates and changes that are not user-facing don't need an entry
+    if: >-
+      github.event.pull_request.user.login != 'dependabot[bot]'
+      && !contains(github.event.pull_request.labels.*.name, 'skip-changelog')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Check that CHANGELOG.md is updated
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          files="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[].filename')"
+          if ! grep -qxF CHANGELOG.md <<< "$files"; then
+            echo "::error::Add an entry under [Unreleased] in CHANGELOG.md, or add the 'skip-changelog' label if the change is not user-facing."
+            exit 1
+          fi
